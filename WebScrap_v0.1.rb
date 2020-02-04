@@ -8,7 +8,7 @@ class WebScraper
 
   def self.scrap
 
-    @jobs_collection = []
+    @object_collection = []
     start_page = 1
     puts "-=START SCRAPING=-"
 
@@ -18,6 +18,7 @@ class WebScraper
     open_page = open(home_page)
     read_page = open_page.read
     parsed_page = Nokogiri::HTML.parse(read_page)
+    byebug
 
     #find the main class in the page
     main_block = parsed_page.css('div.listItems')
@@ -48,19 +49,19 @@ class WebScraper
 
       #Starts the loop to extract the data from every element
 
-      the_block.each do |job|
-        jobs = {
+      the_block.each do |item_in_box|
+        item_in_boxs = {
           #Break the main loop to small css markers for every
           #Object you wish to collect data from
-          Title: job.css('li.c2').css('a').text,
-          Salary: job.css('li.c2').css('span.is_visibility_salary').text,
-          Location: job.css('li.c2').css('span.location')[0].text.gsub(/\s+/, "").split(",")[1],
-          Date: job.css('li.c2').css('span.location')[0].text.split(",")[0],
-          Company: job.css('li.c4').css('a').text,
-          Link: job.css('li.c2').css('a')[0].attributes['href'].value
+          Title: item_in_box.css('li.c2').css('a').text,
+          Salary: item_in_box.css('li.c2').css('span.is_visibility_salary').text,
+          Location: item_in_box.css('li.c2').css('span.location')[0].text.gsub(/\s+/, "").split(",")[1],
+          Date: item_in_box.css('li.c2').css('span.location')[0].text.split(",")[0],
+          Company: item_in_box.css('li.c4').css('a').text,
+          Link: item_in_box.css('li.c2').css('a')[0].attributes['href'].value
 
         }
-        @jobs_collection << jobs
+        @object_collection << item_in_boxs
 
       end
       #Set a break point of the main loop
@@ -80,9 +81,9 @@ class WebScraper
       puts "Writign to CSV File"
       CSV.open('results.csv','wb',) do |csv|
         #csv.to_io.write "\uFEFF"
-        keys = @jobs_collection.map(&:keys).inject(&:|)
+        keys = @object_collection.map(&:keys).inject(&:|)
         csv << keys
-        @jobs_collection.each do |add|
+        @object_collection.each do |add|
           csv << add.values_at(*keys)
         end
       end
